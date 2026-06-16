@@ -18,7 +18,7 @@
 
 ## Routes
 1. GET /
-    - Hello Wordld
+    - Hello World
     - Health Check
 
 2. POST /tiny-url/create
