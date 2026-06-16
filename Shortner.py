@@ -25,6 +25,7 @@ class TextShortener:
         # Slice to the requested length (e.g., 6 characters)
         return short_str[:max_length]
     
+"""
 # --- Usage Example ---
 shortener = TextShortener()
 
@@ -33,3 +34,5 @@ text2 = "An incredibly long piece of text that needs shortening."
 
 print(f"{text1} -> {shortener.shorten(text1)}")
 print(f"{text2} -> {shortener.shorten(text2)}")
+
+"""
