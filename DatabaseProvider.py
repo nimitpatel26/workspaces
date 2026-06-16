@@ -15,7 +15,7 @@ DB Operations:
 
 class DatabaseProvider:
 
-    DB_CONNECTION_STRING = ""
+    DB_CONNECTION_STRING = "postgresql://doadmin:AVNS_KPfSD8o1CpwrY2XGeGH@tiny-url-do-user-33622398-0.g.db.ondigitalocean.com:25060/defaultdb?sslmode=require"
 
     def test_conn(self, dsn=None):
         dsn = self.DB_CONNECTION_STRING
