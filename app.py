@@ -30,7 +30,7 @@ def create_tiny_url():
         custom_alias = custom_alias.strip()
         url_in_db = db_provider.find_url_metadata(custom_alias)
 
-        if custom_alias in url_in_db:
+        if url_in_db:
             return jsonify({"error": "Custom alias already exists"}), 409
         alias = custom_alias
 
@@ -41,7 +41,7 @@ def create_tiny_url():
         alias = text_Shortener.shorten(long_url)
         url_in_db = db_provider.find_url_metadata(alias)
 
-        while alias in url_in_db:
+        while url_in_db:
             alias = text_Shortener.shorten(long_url)
             url_in_db = db_provider.find_url_metadata(alias)
 
@@ -52,9 +52,11 @@ def create_tiny_url():
 
     # 5. Construct the final response
     # request.host_url automatically includes http:// or https:// with the domain
-    short_url = f"{request.host_url}{alias}"
+    short_url = f"{request.host_url}redirect/{alias}"
     
     return jsonify({"shortUrl": short_url}), 201
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
