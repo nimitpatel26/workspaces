@@ -79,6 +79,8 @@ class TinyURLApiTestCase(unittest.TestCase):
         self.assertEqual(response1.headers['Location'], "https://target-destination.com")
         self.assertEqual(mock_db_instance.find_url_metadata.call_count, 1)
 
+        mock_db_instance.reset_mock()
+        
         # --- Request 2: Cache Hit ---
         # Reset the mock tracker to observe fresh behavior on request two
         mock_db_instance.find_url_metadata.reset_mock()

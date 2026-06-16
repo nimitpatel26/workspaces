@@ -34,6 +34,7 @@ def create_tiny_url():
     if custom_alias:
         # Strip whitespace and validate alias uniqueness
         custom_alias = custom_alias.strip()
+        alias = custom_alias
 
         try:
             # Let the DB try to insert. It must have a UNIQUE constraint on 'alias'.
@@ -43,7 +44,6 @@ def create_tiny_url():
             # Catch your specific DB driver's duplicate key exception
             return jsonify({"error": "Custom alias already exists"}), 409
 
-        alias = custom_alias
 
     else:
         text_shortener = TextShortener()
