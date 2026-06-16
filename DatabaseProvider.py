@@ -1,6 +1,7 @@
 
 
 from datetime import datetime, timezone
+import os
 import psycopg
 from psycopg.rows import dict_row
 
@@ -14,8 +15,14 @@ DB Operations:
 """
 
 class DatabaseProvider:
-
-    DB_CONNECTION_STRING = "postgresql://doadmin:AVNS_KPfSD8o1CpwrY2XGeGH@tiny-url-do-user-33622398-0.g.db.ondigitalocean.com:25060/defaultdb?sslmode=require"
+    
+    def __init__(self):
+        # 1. Fetch from environment variable, falling back to None if not set
+        self.DB_CONNECTION_STRING = os.environ.get("DB_CONNECTION_STRING")
+        
+        # 2. Add an explicit safety check to fail quickly if config is missing
+        if not self.DB_CONNECTION_STRING:
+            raise ValueError("Critical Configuration Error: DB_CONNECTION_STRING environment variable is not set.")
 
     def test_conn(self, dsn=None):
         dsn = self.DB_CONNECTION_STRING
@@ -180,9 +187,9 @@ class DatabaseProvider:
             return None
 
 
-# db_provider = DatabaseProvider()
+db_provider = DatabaseProvider()
 # create_urls_table()
 # insert_sample_url("123e4567-e89b-12d3-a456-426614174000", "short1", "https://www.example.com/long-url-1")
-# db_provider.get_all_urls()
+db_provider.get_all_urls()
 # print(db_provider.find_url_metadata("short2"))
 # drop_urls_table()
