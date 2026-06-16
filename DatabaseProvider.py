@@ -180,9 +180,9 @@ class DatabaseProvider:
             return None
 
 
-# db_provider = DatabaseProvider()
+db_provider = DatabaseProvider()
 # create_urls_table()
 # insert_sample_url("123e4567-e89b-12d3-a456-426614174000", "short1", "https://www.example.com/long-url-1")
-# db_provider.get_all_urls()
+db_provider.get_all_urls()
 # print(db_provider.find_url_metadata("short2"))
 # drop_urls_table()

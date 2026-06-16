@@ -56,7 +56,23 @@ def create_tiny_url():
     
     return jsonify({"shortUrl": short_url}), 201
 
+# Clean suffix path match (e.g. /tiny-url/metadata/goog)
+@app.route('/tiny-url/metadata/<alias>', methods=['GET'])
+def get_url_metadata(alias):
+    db_provider = DatabaseProvider()
 
+    # Direct lookup using the suffix string
+    record = db_provider.find_url_metadata(alias)
+    if not record:
+        return jsonify({"error": "Short URL metadata not found"}), 404
+
+    return jsonify({
+        "creationTime": record["creation_time"].isoformat(),
+        "expireTime": record["expire_time"].isoformat(),
+        "accessCount": record["access_count"],
+        "shortUrl": record["short_url"],
+        "longUrl": record["long_url"]
+    }), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
