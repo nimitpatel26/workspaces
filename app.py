@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, redirect, render_template
+from psycopg import errors
 import uuid
 from DatabaseProvider import DatabaseProvider
 from Shortner import TextShortener
@@ -18,6 +19,7 @@ def create_tiny_url():
     long_url = data.get('longUrl')
     custom_alias = data.get('customAlias')
     db_provider = DatabaseProvider()
+    user_id  = uuid.UUID(int=0)
 
     # 2. Check for required fields
     if not long_url:
@@ -27,27 +29,32 @@ def create_tiny_url():
     if custom_alias:
         # Strip whitespace and validate alias uniqueness
         custom_alias = custom_alias.strip()
-        url_in_db = db_provider.find_url_metadata(custom_alias)
 
-        if url_in_db:
+        try:
+            # Let the DB try to insert. It must have a UNIQUE constraint on 'alias'.
+            db_provider.insert_sample_url(user_id, alias, long_url)
+
+        except errors.UniqueViolation: 
+            # Catch your specific DB driver's duplicate key exception
             return jsonify({"error": "Custom alias already exists"}), 409
+
         alias = custom_alias
 
     else:
-        text_Shortener = TextShortener()
+        text_shortener = TextShortener()
+        inserted = False
+        
+        while not inserted:
+            alias = text_shortener.shorten(long_url)
 
-        # Generate a unique random alias
-        alias = text_Shortener.shorten(long_url)
-        url_in_db = db_provider.find_url_metadata(alias)
-
-        while url_in_db:
-            alias = text_Shortener.shorten(long_url)
-            url_in_db = db_provider.find_url_metadata(alias)
-
-    user_id  = uuid.UUID(int=0)
-
-    # 4. Store the mapping
-    db_provider.insert_sample_url(str(user_id), alias, long_url)
+            try:
+                db_provider.insert_sample_url(user_id, alias, long_url)
+                inserted = True
+                
+            except errors.UniqueViolation:
+                # Loop repeats seamlessly if a collision occurs
+                continue
+            
 
     # 5. Construct the final response
     # request.host_url automatically includes http:// or https:// with the domain
