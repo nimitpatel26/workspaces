@@ -24,6 +24,8 @@
 
 3. POST /tiny-url/metadata/{alias}
     - Get the metadata.
-    
+
 4. POST /redirect/{alias}
     - Redirect to the long URL.
+
+![Alt text](./create_api.png)
