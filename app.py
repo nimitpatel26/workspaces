@@ -11,7 +11,6 @@ app = Flask(__name__)
 def hello_world():
     return render_template("index.html")
 
-
 @app.route('/tiny-url/create', methods=['POST'])
 def create_tiny_url():
     # 1. Parse and validate incoming JSON data
@@ -73,6 +72,17 @@ def get_url_metadata(alias):
         "shortUrl": record["short_url"],
         "longUrl": record["long_url"]
     }), 200
+
+# Updated path pattern: GET /redirect/{short-url}
+@app.route('/redirect/<alias>', methods=['GET'])
+def redirect_to_long_url(alias):
+    db_provider = DatabaseProvider()
+    record = db_provider.find_url_metadata(alias)
+    if not record:
+        return jsonify({"error": "URL not found"}), 404
+
+    db_provider.increment_access_count(alias)
+    return redirect(record["long_url"], code=302)
 
 if __name__ == '__main__':
     app.run(debug=True)
