@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, redirect, render_template
+from flask_caching import Cache
 from psycopg import errors
 import uuid
 from DatabaseProvider import DatabaseProvider
@@ -6,6 +7,10 @@ from Shortner import TextShortener
 
 
 app = Flask(__name__)
+
+# Configure Flask-Caching (Simple in-memory cache for single-server setups)
+# For production multi-server setups, change 'SimpleCache' to 'RedisCache'
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
 
 
 @app.route("/")
@@ -54,7 +59,7 @@ def create_tiny_url():
             except errors.UniqueViolation:
                 # Loop repeats seamlessly if a collision occurs
                 continue
-            
+
 
     # 5. Construct the final response
     # request.host_url automatically includes http:// or https:// with the domain
@@ -80,16 +85,33 @@ def get_url_metadata(alias):
         "longUrl": record["long_url"]
     }), 200
 
-# Updated path pattern: GET /redirect/{short-url}
 @app.route('/redirect/<alias>', methods=['GET'])
 def redirect_to_long_url(alias):
-    db_provider = DatabaseProvider()
-    record = db_provider.find_url_metadata(alias)
-    if not record:
-        return jsonify({"error": "URL not found"}), 404
+    # 1. Check server-side cache first to avoid DB hits
+    cache_key = f"url:{alias}"
+    long_url = cache.get(cache_key)
 
+    if not long_url:
+        db_provider = DatabaseProvider()
+        record = db_provider.find_url_metadata(alias)
+        
+        if not record:
+            return jsonify({"error": "URL not found"}), 404
+        
+        long_url = record["long_url"]
+        # Store in cache for 5 minutes (300 seconds)
+        cache.set(cache_key, long_url, timeout=300)
+
+    # 2. Async/Background Write: Increment access count in DB
+    # Note: Because the DB read is bypassed on cache hits, this now runs 
+    # independently without blocking the user response.
+    db_provider = DatabaseProvider()
     db_provider.increment_access_count(alias)
-    return redirect(record["long_url"], code=302)
+
+    # 3. HTTP Client Caching: Use 302 (Found) instead of 301 (Moved Permanently).
+    # 301 caches aggressively in browsers, preventing your counter from tracking clicks.
+    # 302 forces browsers to re-verify the endpoint every time, keeping your analytics accurate.
+    return redirect(long_url, code=302)
 
 if __name__ == '__main__':
     app.run(debug=True)
